@@ -1,10 +1,15 @@
 from pyspark.sql.functions import input_file_name, regexp_extract
 from pyspark.sql.functions import col, substring
 from pyspark.sql import functions as F
+from pyspark.sql.functions import collect_list, concat_ws
 
 books_df = spark.read.text("/home/hadoop/spark_books/*.txt")
 books_df = books_df.withColumn("file_name", input_file_name())
 books_df.show(5, truncate=False)
+
+books_grouped = books_df.groupBy("file_name").agg(concat_ws("\n", collect_list("value")).alias("text"))
+
+books_grouped.show(2, truncate=False)
 
 books_grouped.select(  "file_name", substring("text", 1, 100).alias("text_preview") ).show(2, truncate=False)
 
@@ -42,6 +47,7 @@ books_grouped.groupBy("language") \
 books_grouped.withColumn("title_length", F.length("title")) \
     .agg(F.avg("title_length").alias("avg_title_length")) \
     .show()
+
 
 
 
